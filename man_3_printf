@@ -1,0 +1,119 @@
+# _PRINTF MANUAL
+
+##	DESCRIPTION
+       The  functions  in  the  printf()  family  produce  output  according to a format as described below.  The function  writes output to stdout, the standard output stream.
+
+
+ ####  Format of the format string
+       The  format string is a character string, beginning and ending in its initial shift state, if any.  The format string is composed
+       of zero or more directives: ordinary characters (not %), which are copied unchanged to the output stream; and conversion specifi‐
+       cations, each of which results in fetching zero or more subsequent arguments.  Each conversion specification is introduced by the
+       character %, and ends with a conversion specifier.  In between there may be (in this order) zero or more flags, an optional mini‐
+       mum field width, an optional precision and an optional length modifier.
+
+       The  arguments must correspond properly (after type promotion) with the conversion specifier.  By default, the arguments are used
+       in the order given, where each '*' (see Field width and Precision below) and each conversion specifier asks for the next argument
+       (and  it  is  an  error if insufficiently many arguments are given).  One can also specify explicitly which argument is taken, at
+       each place where an argument is required, by writing "%m$" instead of '%' and "*m$" instead of '*', where the decimal  integer  m
+       denotes the position in the argument list of the desired argument, indexed starting from 1.Thus,
+
+           printf("%*d", width, num);
+
+       and
+
+           printf("%2$*1$d", width, num);
+
+       are  equivalent.   The second style allows repeated references to the same argument.  The C99 standard does not include the style
+       using '$', which comes from the Single UNIX Specification.  If the style using '$' is used, it must be used  throughout  for  all
+       conversions taking an argument and all width and precision arguments, but it may be mixed with "%%" formats, which do not consume
+       an argument.  There may be no gaps in the numbers of arguments specified using '$'; for example, if arguments 1 and 3 are  speci‐
+       fied, argument 2 must also be specified somewhere in the format string.
+
+       For  some numeric conversions a radix character ("decimal point") or thousands' grouping character is used.  The actual character
+       used depends on the LC_NUMERIC part of the locale.  (See setlocale(3).)  The POSIX locale uses '.' as radix character,  and  does
+       not have a grouping character.  Thus,
+
+               printf("%'.2f", 1234567.89);
+
+       results in "1234567.89" in the POSIX locale, in "1234567,89" in the nl_NL locale, and in "1.234.567,89" in the da_DK locale.
+
+####   Flag characters
+       The character % is followed by zero or more of the following flags:
+
+       #      The value should be converted to an "alternate form".  For o conversions, the first character of the output string is made
+              zero (by prefixing a 0 if it was not zero already).  For x and X conversions, a nonzero result has  the  string  "0x"  (or
+              "0X"  for  X  conversions)  prepended to it.  For a, A, e, E, f, F, g, and G conversions, the result will always contain a
+              decimal point, even if no digits follow it (normally, a decimal point appears in the results of those conversions only  if
+              a  digit  follows).   For  g and G conversions, trailing zeros are not removed from the result as they would otherwise be.
+              For other conversions, the result is undefined.
+
+       0      The value should be zero padded.  For d, i, o, u, x, X, a, A, e, E, f, F, g, and G conversions,  the  converted  value  is
+              padded  on  the left with zeros rather than blanks.  If the 0 and - flags both appear, the 0 flag is ignored. If a preci‐
+              sion is given with a numeric conversion (d, i, o, u, x, and X), the 0 flag is ignored.  For other conversions, the  behav‐
+              ior is undefined.
+
+       -      The  converted  value  is to be left adjusted on the field boundary.  (The default is right justification.)  The converted
+              value is padded on the right with blanks, rather than on the left with blanks or zeros.  A - overrides a  0  if  both  are
+              given.
+
+       ' '    (a space) A blank should be left before a positive number (or empty string) produced by a signed conversion.
+
+       +      A  sign (+ or -) should always be placed before a number produced by a signed conversion.  By default, a sign is used only
+              for negative numbers.  A + overrides a space if both are used.
+
+       The five flag characters above are defined in the C99 standard.  The Single UNIX Specification specifies one further flag charac‐
+       ter.
+
+       '      For decimal conversion (i, d, u, f, F, g, G) the output is to be grouped with thousands' grouping characters if the locale
+              information indicates any.  (See setlocale(3).)  Note that many versions of gcc(1) cannot parse this option and will issue
+              a warning.  (SUSv2 did not include %'F, but SUSv3 added it.)
+
+       glibc 2.2 adds one further flag character.
+
+       I      For  decimal  integer  conversion  (i, d, u) the output uses the locale's alternative output digits, if any.  For example,
+              since glibc 2.2.3 this will give Arabic-Indic digits in the Persian ("fa_IR") locale.
+
+###	Conversion specifiers
+       A character that specifies the type of conversion to be applied.  The conversion specifiers and their meanings are:
+
+       d, i   The int argument is converted to signed decimal notation.  The precision, if any, gives the minimum number of digits  that
+              must  appear; if the converted value requires fewer digits, it is padded on the left with zeros.  The default precision is
+              1.  When 0 is printed with an explicit precision 0, the output is empty.
+
+       o, u, x, X
+              The unsigned int argument is converted to unsigned octal (o), unsigned decimal (u), or unsigned hexadecimal (x and X)  no‐
+              tation.   The letters abcdef are used for x conversions; the letters ABCDEF are used for X conversions.  The precision, if
+              any, gives the minimum number of digits that must appear; if the converted value requires fewer digits, it  is  padded  on
+              the left with zeros.  The default precision is 1.  When 0 is printed with an explicit precision 0, the output is empty.
+
+		c      If no l modifier is present, the int argument is converted to an unsigned char, and the resulting  character  is  written.
+              If  an  l  modifier is present, the wint_t (wide character) argument is converted to a multibyte sequence by a call to the
+              wcrtomb(3) function, with a conversion state starting in the initial state, and the resulting multibyte string is written.
+
+       s      If no l modifier is present: the const char * argument is expected to be a pointer to an array of character type  (pointer
+              to a string).  Characters from the array are written up to (but not including) a terminating null byte ('\0'); if a preci‐
+              sion is specified, no more than the number specified are written.  If a precision is given, no null byte need be  present;
+              if  the  precision  is  not specified, or is greater than the size of the array, the array must contain a terminating null
+              byte.
+
+              If an l modifier is present: the const wchar_t * argument is expected to be a pointer to  an  array  of  wide  characters.
+              Wide  characters  from  the array are converted to multibyte characters (each by a call to the wcrtomb(3) function, with a
+              conversion state starting in the initial state before the first wide character), up to and including  a  terminating  null
+              wide character.  The resulting multibyte characters are written up to (but not including) the terminating null byte.  If a
+              precision is specified, no more bytes than the number specified are written, but no partial multibyte characters are writ‐
+              ten.   Note  that  the precision determines the number of bytes written, not the number of wide characters or screen posi‐
+              tions.  The array must contain a terminating null wide character, unless a precision is given and it is so small that  the
+              number of bytes written exceeds it before the end of the array is reached.
+
+ 		%      A '%' is written.  No argument is converted.  The complete conversion specification is '%%'.
+
+###	RETURN VALUE
+       Upon successful return, these functions return the number of characters printed (excluding the null byte used to  end  output  to
+       strings).
+
+       The  functions snprintf() and vsnprintf() do not write more than size bytes (including the terminating null byte ('\0')).  If the
+       output was truncated due to this limit, then the return value is the number of characters (excluding the terminating  null  byte)
+       which would have been written to the final string if enough space had been available.  Thus, a return value of size or more means
+       that the output was truncated.  (See also below under NOTES.)
+
+       If an output error is encountered, a negative value is returned.
